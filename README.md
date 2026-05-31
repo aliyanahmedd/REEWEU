@@ -1,4 +1,4 @@
-# 🛡️ ReviewGuard — AI Fake Review Detector
+#  REEWEU — AI Fake Review Detector
 
 An AI-powered Flask + MongoDB web app that detects fake / bot / paid product
 reviews using NLP and Machine Learning (TF-IDF + Random Forest), with Groq
