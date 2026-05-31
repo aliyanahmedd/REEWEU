@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Records{% endblock %}
+
+{% block content %}
+<div class="records-head">
+    <h2>Review Records</h2>
+    <a class="btn btn-primary" href="{{ url_for('index') }}#link">+ Add Review</a>
+</div>
+
+{% if not db_ok %}
+<div class="flash">MongoDB isn't connected, so there's nothing to show here.</div>
+{% endif %}
+
+<!-- Search + filter -->
+<form method="GET" action="{{ url_for('records') }}" class="filter-bar">
+    <input type="text" name="search" value="{{ search }}" placeholder="Search by product name">
+    <select name="filter">
+        {% for opt in ['All', 'GENUINE', 'FAKE', 'SUSPICIOUS'] %}
+            <option value="{{ opt }}" {{ 'selected' if filter_val == opt else '' }}>{{ opt }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Apply</button>
+</form>
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Product</th><th>Review</th><th>Verdict</th>
+                <th>Confidence</th><th>Date</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in records %}
+            <tr>
+                <td>{{ r.product_name }}</td>
+                <td class="mono">{{ r.review_text[:50] }}{{ '...' if r.review_text|length > 50 else '' }}</td>
+                <td>
+                    <span class="tag
+                        {{ 'tag-fake' if r.predicted_class == 'FAKE' else 'tag-safe' if r.predicted_class == 'GENUINE' else 'tag-warn' }}">
+                        {{ r.predicted_class }}
+                    </span>
+                </td>
+                <td>{{ r.confidence }}%</td>
+                <td>{{ r.timestamp.strftime('%Y-%m-%d') if r.timestamp else '' }}</td>
+                <td class="actions">
+                    <a class="btn small" href="{{ url_for('result', record_id=r._id) }}">View</a>
+                    <a class="btn small" href="{{ url_for('edit', record_id=r._id) }}">Edit</a>
+                    <form method="POST" action="{{ url_for('delete', record_id=r._id) }}"
+                          onsubmit="return confirm('Delete this review?');" style="display:inline;">
+                        <button type="submit" class="btn small danger-btn">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="muted">No records found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('records', page=p, search=search, filter=filter_val) }}"
+           class="page-link {{ 'active' if p == page else '' }}">{{ p }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

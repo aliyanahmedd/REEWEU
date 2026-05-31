@@ -1,0 +1,11 @@
+flask
+pymongo
+scikit-learn
+pandas
+numpy
+joblib
+nltk
+groq
+python-dotenv
+requests
+beautifulsoup4

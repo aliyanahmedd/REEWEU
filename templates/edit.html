@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add Review' if action == 'add' else 'Edit Review' }}{% endblock %}
+
+{% block content %}
+<div class="card form-card">
+    <h2>{{ 'Add Review' if action == 'add' else 'Edit Review' }}</h2>
+
+    <form method="POST"
+          action="{{ url_for('add') if action == 'add' else url_for('edit', record_id=r._id) }}">
+        <label>Product Name</label>
+        <input type="text" name="product_name"
+               value="{{ r.product_name if r else '' }}" placeholder="Product name">
+
+        <label>Star Rating</label>
+        <select name="rating">
+            {% for i in range(5, 0, -1) %}
+                <option value="{{ i }}" {{ 'selected' if r and r.rating == i else '' }}>
+                    {{ i }} Star{{ 's' if i > 1 else '' }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Review Text</label>
+        <textarea name="review_text" rows="8" required>{{ r.review_text if r else '' }}</textarea>
+
+        <button type="submit" class="btn btn-primary">
+            {{ 'Add Review' if action == 'add' else 'Save Changes' }}
+        </button>
+        <a class="btn" href="{{ url_for('records') }}">Cancel</a>
+    </form>
+</div>
+{% endblock %}

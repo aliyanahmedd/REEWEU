@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Analyze{% endblock %}
+
+{% block content %}
+<h2>Analyze Reviews</h2>
+<p class="muted" style="margin-bottom:24px;">
+    Check a single review by pasting its text, or analyze a whole product page by link.
+</p>
+
+<div class="scan-grid">
+    <!-- ===== Scan 1: single review by text ===== -->
+    <div class="card form-card">
+        <h3>📝 Single Review</h3>
+        <p class="muted">Paste one review and get a detailed verdict + AI explanation.</p>
+
+        <form method="POST" action="{{ url_for('analyze') }}">
+            <label>Product Name</label>
+            <input type="text" name="product_name" placeholder="e.g. Wireless Headphones">
+
+            <label>Star Rating</label>
+            <select name="rating">
+                {% for i in range(5, 0, -1) %}
+                    <option value="{{ i }}">{{ i }} Star{{ 's' if i > 1 else '' }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Review Text</label>
+            <textarea name="review_text" rows="7" required
+                      placeholder="Paste the full review text here..."></textarea>
+
+            <button type="submit" class="btn btn-primary">Analyze Review</button>
+        </form>
+    </div>
+
+    <!-- ===== Scan 2: whole product page by link ===== -->
+    <div class="card form-card">
+        <h3>🔗 Product Link</h3>
+        <p class="muted">Paste a product URL and scrape all its reviews at once.</p>
+
+        <form method="POST" action="{{ url_for('analyze_link') }}">
+            <label>Product Name (optional)</label>
+            <input type="text" name="product_name" placeholder="e.g. Wireless Headphones">
+
+            <label>Product URL</label>
+            <input type="text" name="product_url" required
+                   placeholder="https://www.daraz.pk/products/...">
+
+            <button type="submit" class="btn btn-primary">Scrape &amp; Analyze</button>
+        </form>
+
+        <p class="muted" style="margin-top:14px; font-size:0.82rem;">
+            Best on sites that publish reviews openly (e.g. Daraz). If a site
+            blocks scraping, paste the review text on the left instead.
+        </p>
+    </div>
+</div>
+{% endblock %}

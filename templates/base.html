@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}reeweu{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        // Stop the browser from restoring/auto-adjusting scroll on load.
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    </script>
+</head>
+<body>
+    <!-- Top navbar: logo + page links, active page highlighted -->
+    <!-- ambient background shapes (theme colours, drift slowly behind content) -->
+    <div class="bg-decor" aria-hidden="true">
+        <span class="blob b1"></span>
+        <span class="blob b2"></span>
+        <span class="blob b3"></span>
+        <span class="blob b4"></span>
+        <span class="blob b5"></span>
+    </div>
+
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="nav-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="reeweu">
+        </a>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}#link">Analyze</a>
+            <a href="{{ url_for('records') }}"
+               class="{{ 'active' if request.endpoint in ['records','add','edit'] else '' }}">Records</a>
+            <a href="{{ url_for('dashboard') }}"
+               class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">Dashboard</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Flash messages (errors / notices) -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for m in messages %}
+                    <div class="flash">{{ m }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+
+    <!-- Ambient blobs: gentle idle drift + scroll-reactive motion. Each blob
+         moves in its own direction/speed as you scroll, so the background keeps
+         rearranging itself instead of sitting still. -->
+    <script>
+    (function () {
+        const blobs = Array.prototype.slice.call(
+            document.querySelectorAll('.bg-decor .blob'));
+        if (!blobs.length) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        // Give each blob its own idle wobble + scroll-parallax coefficients so
+        // they scatter to different places (and rotate/scale) as you scroll.
+        const cfg = blobs.map(function (b, i) {
+            const dir = i % 2 ? -1 : 1;
+            return {
+                el: b,
+                ix: 28 + i * 10, iy: 22 + i * 8,        // idle amplitude
+                sp: 0.00026 + i * 0.00009,              // idle speed
+                ph: i * 1.7,                            // idle phase
+                mx: dir * (0.10 + i * 0.06),            // scroll -> X
+                my: -dir * (0.16 + i * 0.05),           // scroll -> Y
+                rot: dir * 0.03,                        // scroll -> rotation
+                ss: 0.00018 + i * 0.00004               // scroll -> scale wobble
+            };
+        });
+
+        let sy = window.scrollY;
+        let targetSy = sy;
+        window.addEventListener('scroll', function () {
+            targetSy = window.scrollY;
+        }, { passive: true });
+
+        function frame(t) {
+            sy += (targetSy - sy) * 0.08;   // ease toward real scroll for smoothness
+            cfg.forEach(function (c) {
+                const ix = Math.sin(t * c.sp + c.ph) * c.ix;
+                const iy = Math.cos(t * c.sp * 1.3 + c.ph) * c.iy;
+                const x = ix + sy * c.mx;
+                const y = iy + sy * c.my;
+                const r = sy * c.rot;
+                const s = 1 + Math.sin(t * c.sp + c.ph) * 0.07
+                            + Math.sin(sy * c.ss) * 0.08;
+                c.el.style.transform =
+                    'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) ' +
+                    'rotate(' + r.toFixed(1) + 'deg) scale(' + s.toFixed(3) + ')';
+            });
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    })();
+    </script>
+
+    <!-- Force the page to start at the very top on load (unless a real #anchor
+         was requested), so the loading logo can't trigger an auto-scroll. -->
+    <script>
+    (function () {
+        if (!location.hash) {
+            window.scrollTo(0, 0);
+            window.addEventListener('load', function () { window.scrollTo(0, 0); });
+        }
+    })();
+    </script>
+
+    <!-- Scroll-driven blur: each home section's content blurs uniformly as you
+         scroll past it, so the whole "reeweu" (and each scan) blurs out smoothly. -->
+    <script>
+    (function () {
+        const sections = document.querySelectorAll('.snap-section');
+        if (!sections.length) return;
+        const inners = [];
+        sections.forEach(function (s) {
+            const inner = s.querySelector('.hero, .form-card');
+            if (inner) inners.push({ section: s, inner: inner });
+        });
+
+        let ticking = false;
+        function update() {
+            const vh = window.innerHeight;
+            inners.forEach(function (o) {
+                // Blur based on the SECTION CENTER vs the viewport center, so a
+                // section is perfectly sharp when its card is centred in view
+                // (which is exactly where an #anchor jump lands). It only blurs
+                // once it scrolls UP above centre (it becomes the previous screen).
+                const rect = o.section.getBoundingClientRect();
+                const center = rect.top + rect.height / 2;
+                const above = (vh / 2) - center;        // >0 once scrolled past
+                const ratio = Math.min(Math.max(above / (vh * 0.85), 0), 1);
+                const blur = ratio * 16;
+                o.inner.style.filter = blur > 0.3 ? 'blur(' + blur.toFixed(1) + 'px)' : 'none';
+                o.inner.style.opacity = (1 - ratio * 0.25).toFixed(3);
+            });
+            ticking = false;
+        }
+        function onScroll() {
+            if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        update();
+    })();
+    </script>
+
+    <!-- Scroll blur-reveal: tag cards/banners and reveal them as they enter view -->
+    <script>
+    (function () {
+        // Reveal cards/banners, but NOT ones inside the home scroll sections,
+        // which are driven by the scroll-blur effect above instead.
+        const targets = Array.prototype.filter.call(
+            document.querySelectorAll('.card, .banner, .stat-card'),
+            function (el) { return !el.closest('.snap-section'); });
+        targets.forEach(function (el) { el.classList.add('reveal'); });
+
+        if (!('IntersectionObserver' in window)) {
+            targets.forEach(function (el) { el.classList.add('visible'); });
+            return;
+        }
+        const io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    io.unobserve(e.target);   // reveal once
+                }
+            });
+        }, { threshold: 0.12 });
+        targets.forEach(function (el) { io.observe(el); });
+    })();
+    </script>
+</body>
+</html>

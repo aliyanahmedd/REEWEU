@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Analyze by Link{% endblock %}
+
+{% block content %}
+<div class="card form-card">
+    <h2>Analyze Reviews from a Product Link</h2>
+    <p class="muted">
+        Paste any product page URL. ReviewGuard will try to pull the reviews
+        from that page and analyze each one. If the site blocks scraping,
+        just paste the review text manually instead.
+    </p>
+
+    <form method="POST" action="{{ url_for('analyze_link') }}">
+        <label>Product Name (optional)</label>
+        <input type="text" name="product_name" placeholder="e.g. Wireless Headphones">
+
+        <label>Product URL</label>
+        <input type="text" name="product_url" required
+               placeholder="https://example.com/product/123">
+
+        <button type="submit" class="btn btn-primary">Scrape &amp; Analyze</button>
+        <a class="btn" href="{{ url_for('analyze') }}">Paste text instead</a>
+    </form>
+
+    <p class="muted" style="margin-top:14px;">
+        Note: scraping live commercial sites (like Amazon) is best-effort —
+        they often block bots. Works best on sites that publish reviews openly.
+    </p>
+</div>
+{% endblock %}

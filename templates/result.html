@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Result{% endblock %}
+
+{% block content %}
+<!-- Section 1: full-width verdict banner -->
+{% set cls = r.predicted_class %}
+<div class="banner
+    {{ 'banner-fake' if cls == 'FAKE' else 'banner-safe' if cls == 'GENUINE' else 'banner-warn' }}">
+    {% if cls == 'GENUINE' %}
+        ✅ GENUINE REVIEW
+    {% elif cls == 'FAKE' %}
+        🚨 FAKE REVIEW DETECTED
+    {% else %}
+        ⚠️ SUSPICIOUS REVIEW
+    {% endif %}
+    <div class="banner-conf">Confidence: {{ r.confidence }}%</div>
+</div>
+
+<!-- Section 2: review details -->
+<div class="card">
+    <h2>Review Details</h2>
+    <p><strong>Product:</strong> {{ r.product_name }}</p>
+    <p><strong>Rating:</strong> <span class="stars">{{ r.rating | stars }}</span></p>
+    <div class="review-box">{{ r.review_text }}</div>
+</div>
+
+<!-- Section 3: Groq AI explanation -->
+<div class="card">
+    <h2>Why we flagged this</h2>
+    <p>{{ r.groq_explanation }}</p>
+</div>
+
+<!-- Section 4: suspicious patterns -->
+<div class="card">
+    <h2>Patterns we noticed</h2>
+    {% if r.fake_indicators and r.fake_indicators|length > 0 %}
+        <ul class="indicator-list">
+            {% for ind in r.fake_indicators %}
+                <li>{{ ind.replace('_', ' ') }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="safe">Nothing suspicious turned up in this one.</p>
+    {% endif %}
+</div>
+
+<!-- Section 5: shopping tips -->
+<div class="card">
+    <h2>Tips before you buy</h2>
+    <ul class="tips-list">
+        {% for tip in r.groq_tips.split('\n') %}
+            {% if tip.strip() %}
+                <li>{{ tip.lstrip('- ').strip() }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="btn-row">
+    <a class="btn btn-primary" href="{{ url_for('analyze') }}">Analyze Another Review</a>
+    <a class="btn" href="{{ url_for('records') }}">View All Records</a>
+</div>
+{% endblock %}

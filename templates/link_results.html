@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Link Results{% endblock %}
+
+{% block content %}
+<h2>Results for {{ product_name }}</h2>
+<p class="muted">Source: <a href="{{ url }}" target="_blank" style="color:var(--accent)">{{ url }}</a></p>
+
+{% if not db_ok %}
+<div class="flash">MongoDB isn't connected, so these results weren't saved.</div>
+{% endif %}
+
+<!-- Summary counts -->
+<section class="stat-row">
+    <div class="card stat-card">
+        <div class="stat-num">{{ summary.total }}</div>
+        <div class="stat-label">Reviews Found</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-num danger">{{ summary.fake }}</div>
+        <div class="stat-label">Fake</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-num safe">{{ summary.genuine }}</div>
+        <div class="stat-label">Genuine</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-num warn" style="color:var(--warn)">{{ summary.suspicious }}</div>
+        <div class="stat-label">Suspicious</div>
+    </div>
+</section>
+
+<!-- Per-review verdicts -->
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr><th>Review</th><th>Verdict</th><th>Confidence</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+            {% for r in reviews %}
+            <tr>
+                <td class="mono">{{ r.review_text[:90] }}{{ '...' if r.review_text|length > 90 else '' }}</td>
+                <td><span class="tag
+                    {{ 'tag-fake' if r.predicted_class == 'FAKE' else 'tag-safe' if r.predicted_class == 'GENUINE' else 'tag-warn' }}">
+                    {{ r.predicted_class }}</span></td>
+                <td>{{ r.confidence }}%</td>
+                <td>
+                    <!-- (i) info button: hover to see why the model decided this -->
+                    <span class="info-btn">i
+                        <span class="info-pop">{{ r.reason }}</span>
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="btn-row">
+    <a class="btn btn-primary" href="{{ url_for('analyze_link') }}">Analyze Another Link</a>
+    <a class="btn" href="{{ url_for('records') }}">View All Records</a>
+</div>
+{% endblock %}

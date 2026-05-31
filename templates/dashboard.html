@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+<p class="muted" style="margin-bottom:24px;">A look at everything reeweu has checked so far.</p>
+
+<!-- ============ Section 1: Overview ============ -->
+<section class="dash-section">
+    <h3 class="section-title">Overview</h3>
+    <div class="stat-row">
+        <div class="card stat-card">
+            <div class="stat-num">{{ stats.total_analyzed }}</div>
+            <div class="stat-label">Total Analyzed</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-num danger">{{ stats.fake_count }}</div>
+            <div class="stat-label">Fake Count</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-num safe">{{ stats.genuine_count }}</div>
+            <div class="stat-label">Genuine Count</div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-num">{{ stats.suspicious_count }}</div>
+            <div class="stat-label">Suspicious Count</div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ Section 2: Verdict Breakdown ============ -->
+<section class="dash-section">
+    <h3 class="section-title">Verdict Breakdown</h3>
+    <div class="dash-grid">
+        <div class="card">
+            <canvas id="verdictChart" height="200"></canvas>
+        </div>
+        <div class="card meta-card">
+            <h4>Fake Rate</h4>
+            <div class="big-metric danger">{{ fake_rate }}%</div>
+            <p class="muted">{{ fake_rate }}% of the reviews we checked came back fake.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============ Section 3: Model Info ============ -->
+<section class="dash-section">
+    <h3 class="section-title">Model</h3>
+    <div class="dash-grid">
+        <div class="card">
+            <h4>Model Accuracy</h4>
+            <div class="big-metric">{{ accuracy }}%</div>
+            <p class="muted">This is how often the model was right on reviews it had never seen during training.</p>
+        </div>
+        <div class="card">
+            <h4>How it works</h4>
+            <p class="muted">The model reads the words in a review, learns which
+            ones tend to show up in fake reviews, and a forest of decision trees
+            votes on the result. A set of simple rules also catches common fake
+            phrases.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============ Section 4: Recent Activity ============ -->
+<section class="dash-section">
+    <h3 class="section-title">Recent Activity</h3>
+    <div class="card">
+        <table class="data-table">
+            <thead><tr><th>Product</th><th>Verdict</th><th>Confidence</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for r in recent %}
+                <tr>
+                    <td>{{ r.product_name }}</td>
+                    <td><span class="tag
+                        {{ 'tag-fake' if r.predicted_class == 'FAKE' else 'tag-safe' if r.predicted_class == 'GENUINE' else 'tag-warn' }}">
+                        {{ r.predicted_class }}</span></td>
+                    <td>{{ r.confidence }}%</td>
+                    <td>{{ r.timestamp.strftime('%Y-%m-%d') if r.timestamp else '' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="muted">No reviews analyzed yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Bar chart of the three verdict counts.
+    const ctx = document.getElementById('verdictChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Genuine', 'Fake', 'Suspicious'],
+            datasets: [{
+                label: 'Reviews',
+                data: [{{ stats.genuine_count }}, {{ stats.fake_count }}, {{ stats.suspicious_count }}],
+                backgroundColor: ['#74aab0', '#ff5a26', '#2d3a45']
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#2d3a45' }, grid: { color: '#d5dada' } },
+                x: { ticks: { color: '#2d3a45' }, grid: { color: '#d5dada' } }
+            }
+        }
+    });
+</script>
+{% endblock %}

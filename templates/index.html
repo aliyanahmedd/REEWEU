@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}reeweu{% endblock %}
+
+{% block content %}
+<div class="stack">
+    <!-- ===== Section 1: Landing / main screen ===== -->
+    <section class="snap-section hero-section">
+        <div class="hero">
+            <img class="hero-logo" src="{{ url_for('static', filename='logo.png') }}" alt="reeweu logo">
+            <p class="tagline">Spot fake reviews in seconds.</p>
+
+            <div class="stat-row" style="max-width:640px;margin:0 auto 26px;">
+                <div class="card stat-card">
+                    <div class="stat-num">{{ stats.total_analyzed }}</div>
+                    <div class="stat-label">Analyzed</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-num danger">{{ stats.fake_count }}</div>
+                    <div class="stat-label">Fake</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-num safe">{{ stats.genuine_count }}</div>
+                    <div class="stat-label">Genuine</div>
+                </div>
+            </div>
+
+            <a class="btn btn-primary big" href="#link">Start Analyzing ↓</a>
+        </div>
+    </section>
+
+    {% if not db_ok %}
+    <div class="flash">MongoDB isn't connected. You can still analyze reviews, but they won't be saved.</div>
+    {% endif %}
+
+    <!-- ===== Section 2: Product link scan (comes first) ===== -->
+    <section id="link" class="snap-section">
+        <div class="card form-card scan-single">
+            <h2>🔗 Analyze a Product Link</h2>
+            <p class="muted">Paste a product link and we'll check every review on the page.</p>
+
+            <form method="POST" action="{{ url_for('analyze_link') }}">
+                <label>Product Name (optional)</label>
+                <input type="text" name="product_name" placeholder="e.g. Wireless Headphones">
+
+                <label>Product URL</label>
+                <input type="text" name="product_url" required
+                       placeholder="https://www.daraz.pk/products/...">
+
+                <button type="submit" class="btn btn-primary">Scrape &amp; Analyze</button>
+            </form>
+
+            <p class="muted" style="margin-top:14px; font-size:0.82rem;">
+                Works best on sites that show their reviews openly, like Daraz.
+                If a site blocks us, paste the review text below instead.
+            </p>
+        </div>
+
+        <a class="btn btn-primary big" href="#single" style="margin-top:24px;">Manually Analyze</a>
+    </section>
+
+    <!-- ===== Section 3: Single review scan (overlaps the link section) ===== -->
+    <section id="single" class="snap-section">
+        <div class="card form-card scan-single">
+            <h2>📝 Analyze a Single Review</h2>
+            <p class="muted">Paste one review to see whether it looks real or fake, with a short reason.</p>
+
+            <form method="POST" action="{{ url_for('analyze') }}">
+                <label>Product Name</label>
+                <input type="text" name="product_name" placeholder="e.g. Wireless Headphones">
+
+                <label>Star Rating</label>
+                <select name="rating">
+                    {% for i in range(5, 0, -1) %}
+                        <option value="{{ i }}">{{ i }} Star{{ 's' if i > 1 else '' }}</option>
+                    {% endfor %}
+                </select>
+
+                <label>Review Text</label>
+                <textarea name="review_text" rows="6" required
+                          placeholder="Paste the full review text here..."></textarea>
+
+                <button type="submit" class="btn btn-primary">Analyze Review</button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
