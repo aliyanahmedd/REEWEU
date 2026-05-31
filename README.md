@@ -25,7 +25,7 @@ Flask · MongoDB (PyMongo) · scikit-learn · NLTK · Groq · Jinja2 · Chart.js
 
 ## Project Structure
 ```
-reviewguard/
+reeweu/
 ├── app.py                 # Flask routes + ML inference + indicators
 ├── groq_helper.py         # Groq LLM explanation + tips
 ├── model/
@@ -45,7 +45,7 @@ reviewguard/
 
 ## Setup
 
-1. Clone / unzip the project, then from the `reviewguard/` folder:
+1. Clone / unzip the project, then from the `reeweu/` folder:
 
 ```bash
 pip install -r requirements.txt
@@ -79,11 +79,11 @@ Expected accuracy: **85%+**.
 python app.py
 ```
 
-Open http://localhost:5000
+Openes http://localhost:5000
 
 ---
 
-## How It Works (viva summary)
+## How It Works 
 1. Review text is cleaned (lowercase, strip HTML/special chars, remove
    stopwords, Porter stemming).
 2. **TF-IDF** converts the text to numbers by word frequency — common words get
