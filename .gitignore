@@ -1,6 +1,7 @@
 .env
 __pycache__/
 *.pyc
-model/*.pkl
-model/accuracy.txt
 data/reviews.csv
+
+# NOTE: model/*.pkl and model/accuracy.txt are intentionally committed so the
+# trained model ships with the deployment (Render builds from the repo).

@@ -1,4 +1,5 @@
 flask
+gunicorn
 pymongo
 scikit-learn
 pandas
